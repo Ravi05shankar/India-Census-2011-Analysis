@@ -1,75 +1,88 @@
-SELECT * FROM `india census 2011`.`india  census 2011`;
-SELECT * FROM `india census 2011`.`india  census 2`;
 
+show databases;
+use indiacensus;
+SELECT * FROM `india census 2011`;
+SELECT * FROM `india census 2`;
+
+-- this below code i used to rename the column name of table 
+-- alter table `india  census 2011`change column ï»¿District District varchar(1024);
+
+-- total number of district in india
+select count(District ) as Total_district from `india census 2011`;
+
+-- Total Number of District in Uttar Pradesh sorted by literacy rate 
+
+SELECT * FROM `india census 2011` where State = 'Uttar Pradesh'
+ order by Literacy desc ;
+SELECT count(district) FROM `india census 2011` where State = 'Uttar Pradesh';
+ 
+ -- Total Number of district in bihar sorted by literacy rate 
+SELECT * FROM `india census 2011` where State = 'Bihar' order by Literacy desc ;
+SELECT count(*) FROM `india census 2011` where State = 'Bihar' ;
 
 -- number of rows in the dataset
-SELECT COUNT(*) FROM `india census 2011`.`india  census 2011`;
+SELECT COUNT(*) FROM `india census 2011`;
 
 -- dataset for Jharkhand and Bihar
-SELECT * FROM `india census 2011`.`india  census 2011` WHERE state IN ('rajasthan', 'Bihar');
+SELECT * FROM `india census 2011` WHERE state IN ('rajasthan', 'Bihar');
 
 -- population of India
-SELECT SUM(population) AS Population FROM `india census 2011`.`india census 2`;
-
+SELECT SUM(population) AS Population FROM `india census 2`;
 
 -- average growth by state
-SELECT state, AVG(growth) * 100 AS avg_growth FROM `india census 2011`.`india  census 2011` GROUP BY state;
+SELECT state, AVG(growth) * 100 AS avg_growth FROM `india census 2011` GROUP BY state;
 
 -- average sex ratio by state
-SELECT state, ROUND(AVG(sex_ratio), 0) AS avg_sex_ratio FROM `india census 2011`.`india  census 2011` GROUP BY state ORDER BY avg_sex_ratio DESC;
+SELECT state, ROUND(AVG(sex_ratio), 0) AS avg_sex_ratio
+ FROM `india census 2011`
+ GROUP BY state ORDER BY avg_sex_ratio DESC;
 
 -- average literacy rate by state (greater than 90%)
-SELECT state, ROUND(AVG(literacy), 0) AS avg_literacy_ratio FROM `india census 2011`.`india  census 2011` 
-GROUP BY state HAVING ROUND(AVG(literacy), 0) > 90 ORDER BY avg_literacy_ratio DESC;
+SELECT state, ROUND(AVG(literacy), 0) AS avg_literacy_ratio FROM `india census 2011` 
+GROUP BY state HAVING ROUND(AVG(literacy), 0) > 90 ORDER BY avg_literacy_ratio DESC ;
 
 -- top 3 states showing the highest growth ratio
-SELECT state, AVG(growth) * 100 AS avg_growth FROM `india census 2011`.`india  census 2011`
+SELECT state, AVG(growth) * 100 AS avg_growth FROM `india census 2011`
 GROUP BY state ORDER BY avg_growth DESC LIMIT 3;
 
 -- bottom 3 states showing the lowest sex ratio
-SELECT state, ROUND(AVG(sex_ratio), 0) AS avg_sex_ratio FROM `india census 2011`.`india  census 2011`
+SELECT state, ROUND(AVG(sex_ratio), 0) AS avg_sex_ratio FROM indiacensus.`india census 2011`
 GROUP BY state ORDER BY avg_sex_ratio ASC LIMIT 3;
 
--- top and bottom 3 states in terms of literacy rate
-SELECT state, ROUND(AVG(literacy), 0) AS avg_literacy_ratio FROM `india census 2011`.`india  census 2011` 
-GROUP BY state ORDER BY avg_literacy_ratio DESC LIMIT 3;
+-- top and bottom 5 states in terms of literacy rate
+SELECT state, ROUND(AVG(literacy), 0) AS avg_literacy_ratio FROM `india census 2011` 
+GROUP BY state ORDER BY avg_literacy_ratio DESC LIMIT 5;
 
-SELECT state, ROUND(AVG(literacy), 0) AS avg_literacy_ratio FROM `india census 2011`.`india  census 2011`
-GROUP BY state ORDER BY avg_literacy_ratio ASC LIMIT 3;
+SELECT state, ROUND(AVG(literacy), 0) AS avg_literacy_ratio FROM `india census 2011`
+GROUP BY state ORDER BY avg_literacy_ratio ASC LIMIT 5;
 
 -- states starting with letter 'A' or 'B'
-SELECT DISTINCT state FROM `india census 2011`.`india  census 2011` WHERE LOWER(state) LIKE 'a%' OR LOWER(state) LIKE 'b%';
+SELECT DISTINCT state FROM `india census 2011` WHERE LOWER(state)
+ LIKE 'a%' OR LOWER(state) LIKE 'b%';
 
 -- states starting with letter 'A' and ending with 'M'
-SELECT DISTINCT state FROM `india census 2011`.`india  census 2011` WHERE LOWER(state) LIKE 'a%' AND LOWER(state) LIKE '%m';
+SELECT DISTINCT state FROM indiacensus.`india census 2011` 
+WHERE LOWER(state) LIKE 'a%' AND LOWER(state) LIKE '%m';
 
-SELECT d.state, SUM(d.males) AS total_males, SUM(d.females) AS total_females FROM (
-    SELECT a.district, a.state, ROUND(a.population / (a.sex_ratio + 1), 0) AS males,
-    ROUND((a.population * a.sex_ratio) / (a.sex_ratio + 1), 0) AS females
-    FROM `india census 2011` a
-    INNER JOIN `india census 2` b ON a.district = b.district
-) d
-GROUP BY d.state;
-
--- output top 3 districts from each state with the highest literacy rate
-SELECT a.*
-FROM (
-    SELECT District, state, literacy, RANK() OVER (PARTITION BY state ORDER BY literacy DESC) AS rnk
-    FROM `india census 2011`.`india  census 2011`
-) a
-WHERE a.rnk IN (1, 2, 3)
-ORDER BY state;
+select d.state,sum(d.males) total_males,sum(d.females) total_females from
+(select c.district,c.state state,round(c.population/(c.sex_ratio+1),0) males,
+ round((c.population*c.sex_ratio)/(c.sex_ratio+1),0) females from
+(select a.district,a.state,a.sex_ratio/1000 sex_ratio,b.population 
+from `india census 2011`as a inner join `india census 2` as b 
+on a.district=b.district ) as c) as d
+group by d.state;
 
 
 -- total literacy rate by state
-SELECT c.state, SUM(literate_people) AS total_literate_pop, SUM(illiterate_people) AS total_illiterate_pop
+SELECT c.state, SUM(literate_people) AS total_literate_pop, SUM(illiterate_people) 
+AS total_illiterate_pop
 FROM (
     SELECT d.district, d.state, ROUND(d.literacy_ratio * d.population, 0) AS literate_people,
     ROUND((1 - d.literacy_ratio) * d.population, 0) AS illiterate_people
     FROM (
         SELECT a.district, a.state, a.literacy / 100 AS literacy_ratio, b.population
-        FROM `india census 2011`.`india  census 2011` a
-        INNER JOIN `india census 2` b ON a.district = b.district
+        FROM `india census 2011` a
+        INNER JOIN `india census 2` b ON a.District = b.District
     ) d
 ) c
 GROUP BY c.state;
@@ -84,18 +97,18 @@ FROM (
         d.population AS current_census_population
         FROM (
             SELECT a.district, a.state, a.growth, b.population
-            FROM `india census 2011`.`india  census 2011`a
+            FROM `india census 2011`a
             INNER JOIN `india census 2` b ON a.district = b.district
         ) d
     ) e
     GROUP BY e.state
 ) m;
+
 -- output top 3 districts from each state with the highest literacy rate
 SELECT a.*
 FROM (
     SELECT district, state, literacy, RANK() OVER (PARTITION BY state ORDER BY literacy DESC) AS rnk
-    FROM `india census 2011`.`india  census 2011`
+    FROM indiacensus.`india census 2011`
 ) a
 WHERE a.rnk IN (1, 2, 3)
 ORDER BY state;
-
