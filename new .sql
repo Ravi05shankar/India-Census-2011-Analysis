@@ -90,41 +90,6 @@ FROM (
     ) e
     GROUP BY e.state
 ) m;
-
--- population vs area
-SELECT (g.total_area / g.previous_census_population) AS previous_census_population_vs_area,
-    (g.total_area / g.current_census_population) AS current_census_population_vs_area
-FROM (
-    SELECT q.*, r.total_area
-    FROM (
-        SELECT '1' AS keyy, n.*
-        FROM (
-            SELECT SUM(m.previous_census_population) AS previous_census_population,
-                SUM(m.current_census_population) AS current_census_population
-            FROM (
-                SELECT e.state, SUM(e.previous_census_population) AS previous_census_population,
-                    SUM(e.current_census_population) AS current_census_population
-                FROM (
-                    SELECT d.district, d.state, ROUND(d.population / (1 + d.growth), 0) AS previous_census_population,
-                        d.population AS current_census_population
-                    FROM (
-                        SELECT a.district, a.state, a.growth, b.population
-                        FROM `india census 2011`.`india  census 2011`a
-                        INNER JOIN `india census 2` b ON a.district = b.district
-                    ) d
-                ) e
-                GROUP BY e.state
-            ) m
-        ) n
-    ) q
-    INNER JOIN (
-        SELECT '1' AS keyy, z.*
-        FROM (
-            SELECT SUM(area_km2) AS total_area FROM `india census 2`
-        ) z
-    ) r ON q.keyy = r.keyy
-) g;
-
 -- output top 3 districts from each state with the highest literacy rate
 SELECT a.*
 FROM (
