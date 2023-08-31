@@ -110,5 +110,5 @@ FROM (
     SELECT district, state, literacy, RANK() OVER (PARTITION BY state ORDER BY literacy DESC) AS rnk
     FROM indiacensus.`india census 2011`
 ) a
-WHERE a.rnk IN (1, 2, 3)
+WHERE a.rank IN (1, 2, 3)
 ORDER BY state;
